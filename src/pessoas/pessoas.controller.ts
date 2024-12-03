@@ -15,7 +15,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 export class PessoasController {
   constructor(
     private readonly pessoasService: PessoasService,
-    private readonly recadosUtils: RecadosUtils,
+    //private readonly recadosUtils: RecadosUtils,
     // @Inject(SERVER_NAME)
     // private readonly nomeDaVariavel: string
   ) {}
@@ -27,8 +27,8 @@ export class PessoasController {
 
   @UseGuards(AuthTokenGuard)
   @Get()
-  findAll(@Req() req: Request) {    
-    console.log(req[REQUEST_TOKEN_PAYLOAD_KEY].sub);
+  findAll(@Req() req?: Request) {    
+    //console.log(req[REQUEST_TOKEN_PAYLOAD_KEY].sub);
     return this.pessoasService.findAll();
   }
 

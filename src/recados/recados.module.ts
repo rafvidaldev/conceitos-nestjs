@@ -11,6 +11,7 @@ import { ONLY_LOWERCASE_LETTERS_REGEX, REMOVE_SPACES_REGEX } from './recados.con
 import { MyDynamicModule } from 'src/my-dynamic/my-dynamic.module';
 import { ConfigModule } from '@nestjs/config';
 import recadosConfig from './recados.config';
+import { EmailModule } from 'src/email/email.module';
 // import { ONLY_LOWERCASE_LETTERS_REGEX, REMOVE_SPACES_REGEX, SERVER_NAME } from 'src/recados/recados.constants';
 // import { RegexProcol } from 'src/common/regex/regex.protocol';
 // import { RemoveSpacesRegex } from 'src/common/regex/remove-spaces.regex';
@@ -21,6 +22,7 @@ import recadosConfig from './recados.config';
     ConfigModule.forFeature(recadosConfig),
     TypeOrmModule.forFeature([Recado]), 
     forwardRef(() => PessoasModule),
+    EmailModule
     // MyDynamicModule.register({
     //   apiKey: 'API KEY',
     //   apiUrl: 'https://blablabla'

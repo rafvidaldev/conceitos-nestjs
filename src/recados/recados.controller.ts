@@ -24,6 +24,7 @@ import { RecadosUtils } from './recados.utils';
 import { AuthTokenGuard } from 'src/auth/guards/auth-token.guard';
 import { TokenPayloadParam } from 'src/auth/params/token-payload-param';
 import { TokenPayloadDto } from 'src/auth/dto/token-payload.dto';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
 // import { RoutePoliceGuard } from 'src/auth/guards/route-police.guard';
 // import { ROUTE_POLICY_KEY } from 'src/auth/auth.constants';
 // import { SetRoutePolicy } from 'src/auth/decorators/set-route-policy.decorator';
@@ -47,7 +48,21 @@ export class RecadosController {
         //console.log('RecadosController', this.myDynamicConfigs);
     }
 
-    @Get()    
+    @Get()
+    @ApiOperation({summary: 'Obter todos os recados com paginação'})
+    @ApiQuery({
+        name: 'offset',
+        required: false,
+        example: 1,
+        description: 'Itens a pular'
+    })
+    @ApiQuery({
+        name: 'limit',
+        required: false,
+        example: 1,
+        description: 'Limite de intens por página'
+    })
+    @ApiResponse({status: 200, description: 'Recados retornados com sucesso'})
     findAll(@Query() paginationDto: PaginationDto, @ReqDataParam('url') url) {
         // console.log(this.removeSpacesRegex.execute('REMOVE OS ESPACOS'));
         // console.log(this.onlyLowercaseLettersRegex.execute('REMOVE OS ESPACOS letra minuscula'));
@@ -60,15 +75,23 @@ export class RecadosController {
     //@UseInterceptors(AddHeaderInterception, ErrorHandlingInterceptor)
     @UseGuards(AuthTokenGuard)
     @Get(':id')
+    @ApiOperation({summary: 'Obter um recado a partir do ID'})
+    @ApiParam({name: 'id', description: 'ID', example: 1})
+    @ApiResponse({status: 200, description: 'Registro'})
+    @ApiResponse({status: 404, description: 'Não localizado'})
     findOne(@Param('id', ParseIntPipe) id: number) {
         console.log(this.recadosUtils.inverteSetring('rafael'));
         return this.recadosService.findOne(id);
     }
-
-    @UseGuards(AuthTokenGuard)
+    
     //@UseGuards(AuthAndPolicyGuard)
     //@SetRoutePolicy(RoutePolicies.createReacado)
+    @UseGuards(AuthTokenGuard)
+    @ApiBearerAuth()
     @Post()
+    @ApiOperation({summary: 'Criar um recado'})
+    @ApiResponse({status: 200, description: 'Registro'})
+    @ApiResponse({status: 400, description: 'Dados inválidos'})
     create(
         @Body() createRecadoDto: CreateRecadoDto, 
         @TokenPayloadParam() tokenPayload: TokenPayloadDto
@@ -80,6 +103,11 @@ export class RecadosController {
     //@UseGuards(AuthAndPolicyGuard)
     //@SetRoutePolicy(RoutePolicies.updateRecado)
     @Patch(':id')
+    @ApiOperation({summary: 'Editar um recado'})
+    @ApiParam({name: 'id', description: 'ID', example: 1})
+    @ApiResponse({status: 200, description: 'Registro'})
+    @ApiResponse({status: 400, description: 'Dados inválidos'})
+    @ApiResponse({status: 404, description: 'Não localizado'})
     update(
         @Param('id') id: number, 
         @Body() updateRecadoDto: UpdateRecadoDto, 
@@ -92,6 +120,10 @@ export class RecadosController {
     //@UseGuards(AuthAndPolicyGuard)
     //@SetRoutePolicy(RoutePolicies.deleteRecado)
     @Delete(':id')
+    @ApiOperation({summary: 'Remover um recado'})
+    @ApiParam({name: 'id', description: 'ID', example: 1})
+    @ApiResponse({status: 200, description: 'Registro'})
+    @ApiResponse({status: 404, description: 'Não localizado'})
     remove(
         @Param('id') id: number, 
         @TokenPayloadParam() tokenPayload: TokenPayloadDto

@@ -10,6 +10,8 @@ import { RecadosUtils } from "./recados.utils";
 import { ConfigService, ConfigType } from "@nestjs/config";
 import recadosConfig from "./recados.config";
 import { TokenPayloadDto } from "src/auth/dto/token-payload.dto";
+import { EmailService } from "src/email/email.service";
+import { ResponseRecadoDto } from "./dto/response-recado.dto";
 
 // Scope.DEFAULT => O provider em questão é um singleton, instanciado quando a aplicação inicia
 // Scope.REQUEST => O provider em questão é instanciado a cada requisição
@@ -21,18 +23,19 @@ export class RecadosService {
     constructor(
         @InjectRepository(Recado)
         private readonly recadoRepository: Repository<Recado>,
-        private readonly pessoasService: PessoasService,
+        private readonly pessoasService: PessoasService,        
         //private readonly configService: ConfigService
         //private readonly recadosUtils: RecadosUtils
         @Inject(recadosConfig.KEY)
-        private readonly recadosConfiguration: ConfigType<typeof recadosConfig>
+        private readonly recadosConfiguration: ConfigType<typeof recadosConfig>,
+        private readonly emailService: EmailService,
     ){
         //const databaseUsername = this.configService.get('DATABASE_USERNAME');
         //console.log(databaseUsername);
         console.log(recadosConfiguration.teste1);
     }
 
-    async findAll(paginationDto?: PaginationDto){
+    async findAll(paginationDto?: PaginationDto): Promise<ResponseRecadoDto[]>{
         //console.log(this.recadosUtils.inverteSetring('rafael'));
         
         const {limit = 10, offset = 0} = paginationDto;
@@ -59,7 +62,7 @@ export class RecadosService {
         return recados;
     }
 
-    async findOne(id: number){
+    async findOne(id: number): Promise<ResponseRecadoDto>{
         //const recado = this.recados.find(item => item.id === id);
         const recado = await this.recadoRepository.findOne({
             where: {id},
@@ -81,7 +84,7 @@ export class RecadosService {
         this.throwNotFoundError();
     }
 
-    async create(createRecadoDto: CreateRecadoDto, tokenPayload: TokenPayloadDto){
+    async create(createRecadoDto: CreateRecadoDto, tokenPayload: TokenPayloadDto): Promise<ResponseRecadoDto>{
         const { paraId } = createRecadoDto;
         
         //Encontrar pessoa autor
@@ -98,8 +101,14 @@ export class RecadosService {
             data: new Date()
         };
 
-        const recado = await this.recadoRepository.create(novoRecado);
+        const recado = this.recadoRepository.create(novoRecado);
         await this.recadoRepository.save(recado);
+
+        this.emailService.sendEmail(
+            para.email,
+            `Novo recado de ${de.nome}`,
+            novoRecado.texto
+        );
 
         return {
             ...recado,
@@ -114,7 +123,7 @@ export class RecadosService {
         }
     }
 
-    async update(id: number, updateRecadoDto: UpdateRecadoDto, tokenPayload: TokenPayloadDto){
+    async update(id: number, updateRecadoDto: UpdateRecadoDto, tokenPayload: TokenPayloadDto): Promise<ResponseRecadoDto>{
         const recado = await this.findOne(id);
 
         if(recado.de.id !== tokenPayload.sub) throw new ForbiddenException('Operação não permitida');
@@ -132,7 +141,9 @@ export class RecadosService {
 
         if(recado.de.id !== tokenPayload.sub) throw new ForbiddenException('Operação não permitida');
 
-        return this.recadoRepository.remove(recado);
+        await this.recadoRepository.delete(recado.id);
+
+        return recado;
     }
 
     throwNotFoundError(){

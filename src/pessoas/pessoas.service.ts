@@ -82,9 +82,7 @@ export class PessoasService {
   }
 
   async remove(id: number, tokenPayload: TokenPayloadDto) {
-    const pessoa = await this.pessoaRepository.findOneBy({id});
-
-    if(!pessoa) throw new NotFoundException('Pessoa não localizada');
+    const pessoa = await this.findOne(id);
 
     if(pessoa.id !== tokenPayload.sub) throw new ForbiddenException('Operação não permitida');
 
